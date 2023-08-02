@@ -5,7 +5,7 @@ import cv2
 folder = "12052023-1348"
 depths = []
 images = []
-# sift = "229"
+# shift = "229"
 coeff = [ 1.19410183, -1.003789  ]
 epsilon = 50
 #Caculate color duplication

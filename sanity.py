@@ -19,7 +19,7 @@ def sanity(args):
     torch.hub.help("intel-isl/MiDaS", args.model_midas, force_reload=True) 
     # torch.hub.help("intel-isl/MiDaS", "DPT_Large", force_reload=True) 
 
-    DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+    # DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     DEVICE = "cpu"
     if DEVICE == "cpu":
         print("WARNING: Running on CPU. This will be slow. Check your CUDA installation.")
@@ -40,7 +40,7 @@ def sanity(args):
     except:
         folder_path = args.input_directory.split('\\')[-3]
         pass
-    output_directory = Path(args.output_directory+"/"+folder_path)
+    output_directory = Path(args.output_directory+"/"+folder_path+'/'+'one')
     output_directory.mkdir(parents=True,exist_ok=True)
 
     with torch.no_grad():
@@ -83,7 +83,7 @@ def sanity(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-m','--model_midas', help="midas model", default="DPT_BEiT_L_384")
-    parser.add_argument('-i','--input_directory', help="directory to input images", default="input/12052023-1348/*/l.jpg")
+    parser.add_argument('-i','--input_directory', help="directory to input images", default="input/25072023-1610/*/l.jpg")
     parser.add_argument('-o','--output_directory', help="directory to save output", default="output")
     
     args = parser.parse_args()

@@ -8,25 +8,13 @@ import matplotlib.colors as colors
 
 #FOV = 62.2
 
-path = "output/match/None/"
+path = "output/27072023-1628/200"
 # path = "output/12052023-1348/"
 coeff = [ 1.19410183, -1.003789  ]
- 
-depth_path = sorted(glob.glob(path+"*.npy", recursive=True))
-for path_elem in depth_path:
-    depth = np.load(path_elem)
-    depth = np.polyval(coeff,depth)
-    try:
-        file_stem = path_elem.split('\\')[-1]
-    except:
-        file_stem = path_elem.split('/')[-1]
-        pass
-    
-    output_directory = Path(path+"Distance")
-    output_directory.mkdir(parents=True,exist_ok=True)
-    
-    plt.imsave(path+"Distance/"+"gr.png",depth,cmap='gray')
-    image_gray = cv2.imread(path+"Distance/"+'gr.png',cv2.IMREAD_GRAYSCALE)
+
+def draw_depth(file_stem,depth):
+    plt.imsave(path+"/img/"+"gr.png",depth,cmap='gray')
+    image_gray = cv2.imread(path+"/img/"+'gr.png',cv2.IMREAD_GRAYSCALE)
        
     # print(np.unravel_index(np.argmin(image_gray),image_gray.shape))
     plt.title(file_stem)   
@@ -46,3 +34,26 @@ for path_elem in depth_path:
     # plt.savefig(path+"/Distance/"+file_stem+'_d.png')
     plt.show()
     plt.close()
+    
+depths = []
+depth_path = sorted(glob.glob(path+"/first_depth/*.npy", recursive=True))
+for path_elem in depth_path:
+    depth = np.load(path_elem)
+    if depths == []:
+        depths = depth
+    else:
+        depths = np.concatenate((depths,depth),axis=1)
+    # depth = np.polyval(coeff,depth)
+    try:
+        file_stem = path_elem.split('\\')[-1]
+    except:
+        file_stem = path_elem.split('/')[-1]
+        pass
+    
+    output_directory = Path(path+"/Distance")
+    output_directory.mkdir(parents=True,exist_ok=True)
+    
+    draw_depth(file_stem,depth)
+
+draw_depth("all",depths)
+
