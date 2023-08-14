@@ -147,11 +147,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+train_test_inputs/
 input/
 READMEOLD.md
 calib_disparity.py
 calib_pcd.py
-crop_panorama.py
+# crop_panorama.py
 evaluate.py
 read_distance.py
 sanity.py
