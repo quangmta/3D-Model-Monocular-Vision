@@ -50,7 +50,7 @@ python calib_pcd_panorama.py -f folder_name -s shift_value -d divide_coefficent
 The point cloud will be save as `pcd` file in the folder `output/folder_name/shift/point_cloud/`.
 
 ### Visualize the result
-![teaser](assets/room3d.png)
+![teaser](example_result/room3d.png)
 
 ## **Environment setup**
 The project depends on :
