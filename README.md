@@ -2,36 +2,36 @@
 ## **Table of Contents** <!-- omit in toc -->
 - [**Usage**](#usage)
   - [Create panorama image](#1-create-panorama-image)
-  - [Building the depth map](#2-building-the-depth-map)
-  - [Calibration depth map](#3-calibration-depth-map)
-    - [Match the contours between the component photos](#31-match-the-contours-between-the-component-photos)
-    - [Calibation depth map with measurement data from Lidar](#32-calibation-depth-map-with-measurement-data-from-lidar)
-  - [Building point cloud](#4-building-point-cloud)
+  - [Build the depth map](#2-build-depth-map)
+  - [Calibrate depth map](#3-calibrate-depth-map)
+    - [Match the edges between the component photos](#31-match-the-edges-between-the-component-photos)
+    - [Calibrate depth map with measurement data from Lidar](#32-calibrate-depth-map-with-measurement-data-from-lidar)
+  - [Build point cloud](#4-build-point-cloud)
   - [Visualize the result](#visualize-the-result)
 - [**Environment setup**](#environment-setup)
 
 ## **Usage**
-Scanned images are contained in a folder. Building 3D model from these images is executed by 5 steps:
+Scanned images are contained in a folder. Building 3D model from these images is executed by 4 steps:
 ### 1. Create panorama image
 Create the panorama image by using stitch library from OpenCV:
 '''bash
 python match_images.py -f folder_name
 The panorama image will be created with name `folder_name.png` and saved in the output directory (`output/` by default).
-### 2. Building the depth map
+### 2. Build depth map
 To predict depth map from images, use trained model `ZoeD-M12-N` from [ZoeDepth repo](https://github.com/isl-org/ZoeDepth).
 Divide the panorama image to some smaller images and shift some pixel horizontally, as the dataset image size is 512*384.
 '''bash
 python sanity_panorama.py -f folder_name -s shift_value -d divide_coefficent
 '''
 This will save the depth map as `numpy` file in the folder `output/folder_name/shift/first_depth/`
-### 3. Calibration depth map
+### 3. Calibrate depth map
 #### 3.1 Match the edges between the component photos
 The depth map of each image is predicted independently, so they will often have a certain difference between the photos at the edges when matching the composition photos together. Therefore it is necessary to apply som calibration to match the adjacent edges.
 '''bash
 python match_difference.py -f folder_name -s shift_value -d divide_coefficent
 '''
 This will save the depth map as numpy file in the folder `output/folder_name/shift/match_diff/`
-#### 3.2 Calibation depth map with measurement data from Lidar
+#### 3.2 Calibrate depth map with measurement data from Lidar
 Firstly use SIFT algorithm to determine the coordinates of the pixels measured by Lidar in the panorama image:
 '''bash
 python search_point_in_panorama.py -f folder_name
@@ -42,7 +42,7 @@ Then find the dependent function as the first polynomial.
 python show_paras.py -f folder_name -s shift_value -d divide_coefficent
 '''
 This will save the depth map as numpy file in the folder `output/folder_name/shift/calib_param/`
-### 4. Building point cloud
+### 4. Build point cloud
 Finnaly, create the point cloud from the depth map:
 '''bash
 python calib_pcd_panorama.py -f folder_name -s shift_value -d divide_coefficent
