@@ -36,43 +36,35 @@ def sanity(args):
        
     print("-"*20 + " Processing indoor scene " + "-"*20)
     
-    try:
-        folder_name = args.input_directory.split('/')[-1]
-    except:
-        folder_name = args.input_directory.split('\\')[-1]
-        pass
-    folder_name = folder_name[:-4]
     # print(folder_name)
     
     with torch.no_grad():
-        panorama = Image.open(args.input_directory).convert("RGB")
+        panorama = Image.open(args.input_directory+'/'+args.folder+'.jpg').convert("RGB")
         width, height = panorama.size
         # print(panorama.size)
-        devide = 6
-        shift = 250
         
-        new_output_img = args.output_directory+"/"+folder_name+'/'+str(shift)+'/'+'img'
-        new_output_depth = args.output_directory+"/"+folder_name+'/'+str(shift)+'/'+'first_depth'
+        new_output_img = args.output_directory+"/"+args.folder+'/'+args.shift+'/'+'img'
+        new_output_depth = args.output_directory+"/"+args.folder+'/'+args.shift+'/'+'first_depth'
         Path(new_output_img).mkdir(parents=True,exist_ok=True)    
         Path(new_output_depth).mkdir(parents=True,exist_ok=True)
         
         # print(f"Found {len(images_path)} images. Saving files to {output_directory}/")
         depths = []
-        for index in tqdm(range(devide)):
-            left = int(index*width/devide)+shift
-            right = int((index+1)*width/devide)+shift
+        for index in tqdm(range(int(args.divide))):
+            left = int(index*width/int(args.divide))+int(args.shift)
+            right = int((index+1)*width/int(args.divide))+int(args.shift)
             if right<=width:
                 img = panorama.crop((left,0,right,height))
             else:
                 imgr = panorama.crop((left,0,width,height))
-                imgl = panorama.crop((0,0,shift,height))
+                imgl = panorama.crop((0,0,int(args.shift),height))
                 img = Image.new("RGB",(right-left,height))
                 img.paste(imgr,(0,0))
                 img.paste(imgl,(width-left,0))
             # print(img.size)
             # img = image.resize((512,384),Image.LANCZOS)
             # print("???")
-            file_stem = "/"+folder_name+"-depth-"+str(index)   
+            file_stem = "/"+args.folder+"-depth-"+str(index)   
             # print(file_stem)         
             X = ToTensor()(img)
             X = X.unsqueeze(0).to(DEVICE)
@@ -83,20 +75,23 @@ def sanity(args):
                 depths = depth
             else:
                 depths = np.concatenate((depths,depth),axis=1)
-            img.save(new_output_img +"/"+ folder_name+"-"+str(index)+"-"+str(int(shift))+".png")
-            np.save(new_output_depth + file_stem +"-"+str(int(shift))+ ".npy", depth)
-            plt.imsave(new_output_img + file_stem +"-"+str(int(shift))+".png", depth, cmap='jet_r')
+            img.save(new_output_img +"/"+ args.folder+"-"+str(index)+"-"+str(int(args.shift))+".png")
+            np.save(new_output_depth + file_stem +"-"+str(int(args.shift))+ ".npy", depth)
+            plt.imsave(new_output_img + file_stem +"-"+str(int(args.shift))+".png", depth, cmap='jet_r')
             # plt.imshow(depth,cmap="jet_r")
-        np.save(new_output_depth + "/"+folder_name+"-depth-"+str(int(shift))+".npy", depths)
-        plt.imsave(new_output_img + "/"+folder_name+"-depth-"+str(int(shift))+".png", depths, cmap='jet_r')
+        np.save(new_output_depth + "/"+args.folder+"-depth-"+str(int(args.shift))+".npy", depths)
+        plt.imsave(new_output_img + "/"+args.folder+"-depth-"+str(int(args.shift))+".png", depths, cmap='jet_r')
         # plt.imshow(depths,cmap="jet_r")
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-m','--model_midas', help="midas model", default="DPT_BEiT_L_384")
     # parser.add_argument('-i','--input_directory', help="directory to input images", default="input/12052023-1348/*/l.jpg")
-    parser.add_argument('-i','--input_directory', help="directory to input images", default="output/panorama/27072023-1628.png")
+    parser.add_argument('-i','--input_directory', help="directory to input images", default="output/panorama")
+    parser.add_argument('-f','--folder', help="folder of input images", default="12052023-1348")
     parser.add_argument('-o','--output_directory', help="directory to save output", default="output")
+    parser.add_argument('-s','--shift', help="shift of input images", default="0")
+    parser.add_argument('-d','--divide', help="divide coefficent of input images", default="6")
     
     args = parser.parse_args()
     sanity(args)       

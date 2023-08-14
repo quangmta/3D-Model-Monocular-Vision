@@ -32,7 +32,7 @@ def calculate_dark(image):
     for i in range(0,100):
         check = False
         for j in range(left,right):
-            if np.array_equal(panorama[i,j],[0,0,0]):
+            if np.array_equal(image[i,j],[0,0,0]):
                 check = True
                 break
         if j == right-1 and check == False:
@@ -43,13 +43,13 @@ def calculate_dark(image):
     for i in range(image.shape[0]-1,image.shape[0]-101,-1):
         check = False
         for j in range(left,right):
-            if np.array_equal(panorama[i,j],[0,0,0]):
+            if np.array_equal(image[i,j],[0,0,0]):
                 break
         if j == right-1 and check == False:
             break
     bottom = i
     print(bottom)
-    return panorama[top:bottom,left:right]
+    return image[top:bottom,left:right]
 
 panorama = calculate_dark(panorama)
 panorama = cv2.resize(panorama,(width,384),cv2.INTER_AREA)
