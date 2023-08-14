@@ -146,5 +146,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
 input/
 READMEOLD.md
+calib_disparity.py
+calib_pcd.py
+crop_panorama.py
+evaluate.py
+read_distance.py
+sanity.py
+solve_paras_one.py
+train_mix.py
+train_mono.py
