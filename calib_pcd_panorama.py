@@ -44,7 +44,7 @@ def calib_pcd(args):
         # Mask colors and points
         colors = cv2.cvtColor(img, cv2.COLOR_BGR2RGB).reshape(-1,3)
 
-        delta = 2*math.pi*(index/int(args.divide)+int(args.shift)/(6*width))
+        delta = 2*math.pi*(index/int(args.divide)+int(args.shift)/(int(args.divide)*width))
         Q = [[np.cos(delta),0,np.sin(delta)],
             [0,1,0],
             [-np.sin(delta),0,np.cos(delta)]]
