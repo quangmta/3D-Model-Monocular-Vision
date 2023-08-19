@@ -69,7 +69,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-io','--inout_directory', help="directory to images", default="output")
     parser.add_argument('-f','--folder', help="folder of input images", default="27072023-1628")
-    parser.add_argument('-s','--shift', help="shift of input images", default="0")
+    parser.add_argument('-s','--shift', help="shift of input images", default="100")
     parser.add_argument('-d','--divide', help="divide coefficent of input images", default="6")
     
     args = parser.parse_args()

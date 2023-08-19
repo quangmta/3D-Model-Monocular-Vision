@@ -11,7 +11,7 @@ def solve_paras(args):
     depths = []
     for index in range(int(args.divide)):
         # depth = np.load("output/{0}/{2}/match_diff/{0}-depth-{1}-{2}.npy".format(folder,index,shift))
-        depth = np.load("{0}/{1}/{3}/match_diff/{1}-depth-{2}-{3}.npy".format(args.inout_directory,args.folder,index,args.shift))
+        depth = np.load("{0}/{1}/{3}/first_depth/{1}-depth-{2}-{3}.npy".format(args.inout_directory,args.folder,index,args.shift))
         depths.append(depth)
     width = sum(depths[i].shape[1] for i in range(int(args.divide)))
     # print(width)
@@ -30,7 +30,7 @@ def solve_paras(args):
         data.append([depths[part_number][int(row['yp']),col_part],row['Distance']/100])
         
         # # draw circle    
-        # image_i = cv2.imread('input/'+folder+"/"+str(int(row['Angle']))+"/l.jpg")
+        # image_i = cv2.imread('input/'+args.folder+"/"+str(int(row['Angle']))+"/l.jpg")
         # image_i = cv2.resize(image_i,(511,384),interpolation = cv2.INTER_AREA)
         
         # img_new = depths[part_number].copy()
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-io','--inout_directory', help="directory to images", default="output")
     parser.add_argument('-f','--folder', help="folder of input images", default="27072023-1628")
-    parser.add_argument('-s','--shift', help="shift of input images", default="0")
+    parser.add_argument('-s','--shift', help="shift of input images", default="100")
     parser.add_argument('-d','--divide', help="divide coefficent of input images", default="6")
     
     args = parser.parse_args()
