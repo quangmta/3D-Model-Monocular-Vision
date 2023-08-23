@@ -39,7 +39,7 @@ def sanity(args):
     # print(folder_name)
     
     with torch.no_grad():
-        panorama = Image.open(args.input_directory+'/'+args.folder+'.jpg').convert("RGB")
+        panorama = Image.open(args.input_directory+'/'+args.folder+'.png').convert("RGB")
         width, height = panorama.size
         # print(panorama.size)
         
@@ -88,9 +88,9 @@ if __name__ == '__main__':
     parser.add_argument('-m','--model_midas', help="midas model", default="DPT_BEiT_L_384")
     # parser.add_argument('-i','--input_directory', help="directory to input images", default="input/12052023-1348/*/l.jpg")
     parser.add_argument('-i','--input_directory', help="directory to input images", default="output/panorama")
-    parser.add_argument('-f','--folder', help="folder of input images", default="12052023-1348")
+    parser.add_argument('-f','--folder', help="folder of input images", default="27072023-1628")
     parser.add_argument('-o','--output_directory', help="directory to save output", default="output")
-    parser.add_argument('-s','--shift', help="shift of input images", default="0")
+    parser.add_argument('-s','--shift', help="shift of input images", default="100")
     parser.add_argument('-d','--divide', help="divide coefficent of input images", default="6")
     
     args = parser.parse_args()

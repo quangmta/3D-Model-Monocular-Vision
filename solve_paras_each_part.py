@@ -36,16 +36,16 @@ def solve_paras(args):
         while id_point<len(sorted_point_distance) and sorted_point_distance.iloc[id_point]['xp']<right:
             row = sorted_point_distance.iloc[id_point]
             col_part = int(row['xp'] - left)
-            depth_in_map = row['Distance']/100*math.cos(
-                (col_part-depths[index].shape[1]/2)/depths[index].shape[1]*2*math.pi/int(args.divide))
+            depth_in_map = row['Distance']/100*math.cos(math.atan(
+                (col_part-depths[index].shape[1]/2)/(depths[index].shape[1]/2)*math.tan(math.pi/int(args.divide))))
             print(row['Angle'],col_part,row['yp'],depths[index][int(row['yp']),col_part],depth_in_map)
             data.append([depths[index][int(row['yp']),col_part],depth_in_map])
             coordinates.append([col_part,int(row['yp'])])
             id_point+=1
             if id_point == len(sorted_point_distance) and int(args.shift)!=0:
                 id_point = 0
-                left = 0
-                right = right - width
+                left -= width
+                right -= width
  
         data = np.array(data)
         data = data[data[:,0].argsort()]

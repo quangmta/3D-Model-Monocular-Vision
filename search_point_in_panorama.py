@@ -24,6 +24,9 @@ def search_point(args):
 
     point_distance_file = open(args.output_directory+'/'+args.folder+'/distance.csv','w')
     point_distance_file.write("Angle,x,y,xp,yp,Distance\n")
+    
+    output_directory = Path(args.output_directory+'/'+args.folder+'/point')
+    output_directory.mkdir(parents=True,exist_ok=True)
 
     for index,(angle,distance) in enumerate(distance_table):
         angle = int(angle)
@@ -111,12 +114,13 @@ def search_point(args):
         ax.set_title(str(angle)+' panorama',fontsize=10)
         
         fig.tight_layout()
+        fig.savefig(f'{args.output_directory}/{args.folder}/point/{angle}.png')
         plt.show()
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i','--input_directory', help="directory to input images", default="input")
-    parser.add_argument('-f','--folder', help="folder of input images", default="25072023-1610")
+    parser.add_argument('-f','--folder', help="folder of input images", default="27072023-1628")
     parser.add_argument('-o','--output_directory', help="directory to input images", default="output")
     args = parser.parse_args()
     search_point(args) 

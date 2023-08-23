@@ -4,8 +4,8 @@
   - [Create panorama image](#1-create-panorama-image)
   - [Build the depth map](#2-build-depth-map)
   - [Calibrate depth map](#3-calibrate-depth-map)
-    - [Match the edges between the component photos](#31-match-the-edges-between-the-component-photos)
-    - [Calibrate depth map with measurement data from Lidar](#32-calibrate-depth-map-with-measurement-data-from-lidar)
+    - [Calibrate depth map with measurement data from Lidar](#31-calibrate-depth-map-with-measurement-data-from-lidar)
+    - [Match the edges between the component photos](#32-match-the-edges-between-the-component-photos)
   - [Build point cloud](#4-build-point-cloud)
   - [Visualize the result](#visualize-the-result)
 - [**Environment setup**](#environment-setup)
@@ -28,14 +28,7 @@ python sanity_panorama.py -f folder_name -s shift_value -d divide_coefficent
 This will save the depth map as `numpy` file in the folder `output/folder_name/shift/first_depth/`
 
 ### 3. Calibrate depth map
-#### 3.1 Match the edges between the component photos
-The depth map of each image is predicted independently, so they will often have a certain difference between the photos at the edges when matching the composition photos together. Therefore it is necessary to apply som calibration to match the adjacent edges.
-```bash
-python match_difference.py -f folder_name -s shift_value -d divide_coefficent
-```
-This will save the depth map as numpy file in the folder `output/folder_name/shift/match_diff/`
-
-#### 3.2 Calibrate depth map with measurement data from Lidar
+#### 3.1 Calibrate depth map with measurement data from Lidar
 Firstly use SIFT algorithm to determine the coordinates of the pixels measured by Lidar in the panorama image:
 ```bash
 python search_point_in_panorama.py -f folder_name
@@ -43,9 +36,16 @@ python search_point_in_panorama.py -f folder_name
 These coordinates will be saved in csv file `distance.csv` in the folder `27072023-1628` in the output directory.
 Then find the dependent function as the first polynomial.
 ```bash
-python solve_paras.py -f folder_name -s shift_value -d divide_coefficent
+python solve_paras_each_part.py -f folder_name -s shift_value -d divide_coefficent
 ```
 This will save the depth map as numpy file in the folder `output/folder_name/shift/calib_param/`
+
+#### 3.2 Match the edges between the component photos
+The depth map of each image is predicted independently, so they will often have a certain difference between the photos at the edges when matching the composition photos together. Therefore it is necessary to apply som calibration to match the adjacent edges.
+```bash
+python match_difference.py -f folder_name -s shift_value -d divide_coefficent
+```
+This will save the depth map as numpy file in the folder `output/folder_name/shift/match_diff/`
 
 ### 4. Build point cloud
 Finnaly, create the point cloud from the depth map:
