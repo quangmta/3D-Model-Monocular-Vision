@@ -36,7 +36,7 @@ python search_point_in_panorama.py -f folder_name
 These coordinates will be saved in csv file `distance.csv` in the folder `27072023-1628` in the output directory.
 Then find the dependent function as the first polynomial.
 ```bash
-python solve_paras_each_part.py -f folder_name -s shift_value -d divide_coefficent
+python solve_param_each_part.py -f folder_name -s shift_value -d divide_coefficent
 ```
 This will save the depth map as numpy file in the folder `output/folder_name/shift/calib_param/`
 

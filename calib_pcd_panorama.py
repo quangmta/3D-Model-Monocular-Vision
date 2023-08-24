@@ -24,7 +24,7 @@ def calib_pcd(args):
     Path(output_directory).mkdir(parents=True,exist_ok=True)
     pcd_all = o3d.geometry.PointCloud()
     for index in range(int(args.divide)):
-        depth = np.load("{0}/{1}/{3}/match_diff/{1}-depth-{2}-{3}.npy".format(args.inout_directory,args.folder,index,args.shift))
+        depth = np.load("{0}/{1}/{3}/{4}/{1}-depth-{2}-{3}.npy".format(args.inout_directory,args.folder,index,args.shift,args.depth_folder))
         img = cv2.imread("{0}/{1}/{3}/img/{1}-{2}-{3}.png".format(args.inout_directory,args.folder,index,args.shift))
 
         height, width = depth.shape[:2]
@@ -69,6 +69,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-io','--inout_directory', help="directory to images", default="output")
     parser.add_argument('-f','--folder', help="folder of input images", default="27072023-1628")
+    parser.add_argument('-df','--depth_folder', help="folder of depth", default="match_diff")
     parser.add_argument('-s','--shift', help="shift of input images", default="100")
     parser.add_argument('-d','--divide', help="divide coefficent of input images", default="6")
     

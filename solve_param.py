@@ -11,7 +11,7 @@ def solve_paras(args):
     depths = []
     for index in range(int(args.divide)):
         # depth = np.load("output/{0}/{2}/match_diff/{0}-depth-{1}-{2}.npy".format(folder,index,shift))
-        depth = np.load("{0}/{1}/{3}/first_depth/{1}-depth-{2}-{3}.npy".format(args.inout_directory,args.folder,index,args.shift))
+        depth = np.load("{0}/{1}/{3}/{4}}/{1}-depth-{2}-{3}.npy".format(args.inout_directory,args.folder,index,args.shift,args.depth_folder))
         depths.append(depth)
     width = sum(depths[i].shape[1] for i in range(int(args.divide)))
     # print(width)
@@ -90,6 +90,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-io','--inout_directory', help="directory to images", default="output")
     parser.add_argument('-f','--folder', help="folder of input images", default="27072023-1628")
+    parser.add_argument('-df','--depth_folder', help="folder of depth", default="first_depth")
     parser.add_argument('-s','--shift', help="shift of input images", default="100")
     parser.add_argument('-d','--divide', help="divide coefficent of input images", default="6")
     

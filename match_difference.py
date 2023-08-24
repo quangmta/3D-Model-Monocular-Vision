@@ -189,9 +189,16 @@ def calib_depth(depths,dup_left,dup_right,delta,step_diff,threshold):
             # arg = np.append(arg,depths[index].shape[1]-2)
             # arg = np.append(arg,depths[index].shape[1]-1)
             new_arg = [0]
+            meet=1
+            id_meet=arg[0]
             for i in range(1,len(arg)):
                 if arg[i]-arg[i-1]>1:
-                    new_arg = np.append(new_arg,arg[i-1])
+                    if meet:
+                        new_arg = np.append(new_arg,int((arg[i-1]+id_meet)/2))
+                        meet=0
+                    else:
+                        id_meet=arg[i]
+                        meet=1
             if arg[-1]-arg[-2]==1:
                 new_arg = np.append(new_arg,arg[-1])
             new_arg = np.append(new_arg,len(delta[index])-1)
@@ -202,7 +209,7 @@ def calib_depth(depths,dup_left,dup_right,delta,step_diff,threshold):
                 print(dup_left[index][new_arg[i]:new_arg[i+1]])
                 print(dup_right[index-1][new_arg[i]:new_arg[i+1]])
                 if np.sum((dup_left[index][new_arg[i]:new_arg[i+1]]>=threshold) &\
-                    (dup_right[index-1][new_arg[i]:new_arg[i+1]]>=threshold))/(new_arg[i+1]-new_arg[i]) < 0.75\
+                    (dup_right[index-1][new_arg[i]:new_arg[i+1]]>=threshold))/(new_arg[i+1]-new_arg[i]) < 0.65\
                     and new_arg[i+1]-new_arg[i]<len(delta[index])/2:
                     check[i] = True
                     if new_arg[i]==0:
@@ -235,7 +242,7 @@ def match_diff(args):
     for index in range(int(args.divide)):
         img = cv2.imread("{0}/{1}/{3}/img/{1}-{2}-{3}.png".format(args.inout_directory,args.folder,index,args.shift),cv2.IMREAD_COLOR)
         # print(img.shape)
-        depth = np.load("{0}/{1}/{3}/calib_param/{1}-depth-{2}-{3}.npy".format(args.inout_directory,args.folder,index,args.shift))
+        depth = np.load("{0}/{1}/{3}/{4}/{1}-depth-{2}-{3}.npy".format(args.inout_directory,args.folder,index,args.shift,args.depth_folder))
         # depth = np.polyval(coeff,depth)
         depths.append(depth)
         images.append(img)
@@ -259,14 +266,15 @@ def match_diff(args):
         # print(depths_new[index][:,0]-depths_new[index-1][:,-1])
         print(d.min(),d.max(),d.mean())
         plt.title(str(index))
-        plt.plot(np.arange(0,len(d),1),d,'y')
+        plt.plot(np.arange(0,len(d),1),d,'y',label='diffenrence')
+        plt.plot(np.arange(0,len(dy[index]),1),dy[index],'r',label='diffirential')
         # dy = [(d[i+step_diff]-d[i]) for i in range(len(d)-step_diff)]
-        plt.plot(np.arange(0,len(d),1),depths_new[index][:,0],'green')
-        plt.plot(np.arange(0,len(d),1),depths_new[index-1][:,-1],'blue')
-        plt.plot(np.arange(0,len(d),1),depths[index][:,0],'black')
-        plt.plot(np.arange(0,len(d),1),depths[index-1][:,-1],'cyan')
+        plt.plot(np.arange(0,len(d),1),depths[index][:,0],'black',label='depth')
+        plt.plot(np.arange(0,len(d),1),depths[index-1][:,-1],'cyan',label='depth*')
+        plt.plot(np.arange(0,len(d),1),depths_new[index][:,0],'green',label='new depth')
+        plt.plot(np.arange(0,len(d),1),depths_new[index-1][:,-1],'blue',label='new depth*')
         # plt.plot(np.arange(0,len(d),1),(depths[index][:,0]+depths[index-1][:,-1])/2,'black')
-        plt.plot(np.arange(0,len(dy[index]),1),dy[index],'r')
+        plt.legend(loc='lower left')
         plt.show()
 
 
@@ -281,7 +289,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-io','--inout_directory', help="directory to images", default="output")
     parser.add_argument('-f','--folder', help="folder of input images", default="27072023-1628")
-    parser.add_argument('-s','--shift', help="shift of input images", default="100")
+    parser.add_argument('-df','--depth_folder', help="folder of depth", default="calib_param")
+    parser.add_argument('-s','--shift', help="shift of input images", default="100")    
     parser.add_argument('-d','--divide', help="divide coefficent of input images", default="6")
     
     args = parser.parse_args()
