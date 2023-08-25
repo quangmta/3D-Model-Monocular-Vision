@@ -90,7 +90,7 @@ if __name__ == '__main__':
     parser.add_argument('-i','--input_directory', help="directory to input images", default="output/panorama")
     parser.add_argument('-f','--folder', help="folder of input images", default="27072023-1628")
     parser.add_argument('-o','--output_directory', help="directory to save output", default="output")
-    parser.add_argument('-s','--shift', help="shift of input images", default="100")
+    parser.add_argument('-s','--shift', help="shift of input images", default="170")
     parser.add_argument('-d','--divide', help="divide coefficent of input images", default="6")
     
     args = parser.parse_args()

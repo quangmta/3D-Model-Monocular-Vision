@@ -29,9 +29,9 @@ def calib_hoz_left(images,color_threshold,stepx,stepy):
                     count+=stepx
                 else:
                     break
-            for j in range(stepy):
+            for j in range(bottom-i):
                 dup.append(count)
-        dups.append(dup)
+        dups.append(dup[:len(img)])
     
     return np.array(dups)
 
@@ -59,7 +59,7 @@ def calib_hoz_right(images,color_threshold,stepx,stepy):
                     break
             for j in range(stepy):
                 dup.append(count)
-        dups.append(dup)
+        dups.append(dup[:len(img)])
     return np.array(dups)
 
 def calib_mask(dup_l,dup_r,threshold):
@@ -209,7 +209,7 @@ def calib_depth(depths,dup_left,dup_right,delta,step_diff,threshold):
                 print(dup_left[index][new_arg[i]:new_arg[i+1]])
                 print(dup_right[index-1][new_arg[i]:new_arg[i+1]])
                 if np.sum((dup_left[index][new_arg[i]:new_arg[i+1]]>=threshold) &\
-                    (dup_right[index-1][new_arg[i]:new_arg[i+1]]>=threshold))/(new_arg[i+1]-new_arg[i]) < 0.65\
+                    (dup_right[index-1][new_arg[i]:new_arg[i+1]]>=threshold))/(new_arg[i+1]-new_arg[i]) < 0.5\
                     and new_arg[i+1]-new_arg[i]<len(delta[index])/2:
                     check[i] = True
                     if new_arg[i]==0:
@@ -247,8 +247,8 @@ def match_diff(args):
         depths.append(depth)
         images.append(img)
 
-    dup_left = calib_hoz_left(images,25,5,5)
-    dup_right = calib_hoz_right(images,25,5,5)
+    dup_left = calib_hoz_left(images,25,4,4)
+    dup_right = calib_hoz_right(images,25,4,4)
     # print(dup_right[3][58:135])
     # print(dup_left[4][58:135])
 
@@ -259,23 +259,66 @@ def match_diff(args):
     # depths_new = new_depth(depths,mask_left,mask_right,delta)
     step_diff = 5
     depths_new,dy = calib_depth(depths,dup_left,dup_right,delta,step_diff,15)
-
+   
     for index in range(int(args.divide)):
         d = depths[index][:,0]-depths[index-1][:,-1]
         m = (depths[index][:,0]+depths[index-1][:,-1])/2
         # print(depths_new[index][:,0]-depths_new[index-1][:,-1])
         print(d.min(),d.max(),d.mean())
-        plt.title(str(index))
-        plt.plot(np.arange(0,len(d),1),d,'y',label='diffenrence')
-        plt.plot(np.arange(0,len(dy[index]),1),dy[index],'r',label='diffirential')
+        
+        fig = plt.figure(figsize=(8, 6))
+
+        index2 = index-1 if index>0 else int(args.divide)-1
+        img1 = cv2.imread('{0}/{1}/{2}/img/{1}-{3}-{2}.png'.format(args.inout_directory,args.folder,args.shift,index))
+        img2 = cv2.imread('{0}/{1}/{2}/img/{1}-{3}-{2}.png'.format(args.inout_directory,args.folder,args.shift,index2))
+        
+        # for row,lenght in enumerate(dup_left[index]):
+        #     img1[row,lenght]=[0,0,225]
+        # for row,lenght in enumerate(dup_right[index]):
+        #     img2[row,len(img2[0])-lenght]=[0,0,225]
+        
+        ax = fig.add_subplot(2, 2, 2)
+        ax.imshow(cv2.cvtColor(img1, cv2.COLOR_BGR2RGB))
+        ax.plot(dup_left[index],np.arange(0,len(img1)),'r')
+        ax.set_title(str(index),fontsize=10)
+        ax.axis('off')  
+        
+        ax = fig.add_subplot(2, 2, 1)
+        ax.imshow(cv2.cvtColor(img2, cv2.COLOR_BGR2RGB))
+        ax.plot(len(img2[0])-dup_right[index2],np.arange(0,len(img2)),'r')
+        ax.axis('off')  
+        ax.set_title(str(index2),fontsize=10)
+        
+        
+        ax = fig.add_subplot(2, 2, 4)
+        ax.imshow(depths[index],cmap='jet_r')
+        # ax.set_title(str(index),fontsize=10)
+        ax.axis('off')
+        
+        ax = fig.add_subplot(2, 2, 3)
+        ax.imshow(depths[index2],cmap='jet_r')
+        # ax.set_title(str(index),fontsize=10)
+        ax.axis('off')  
+        
+        fig.tight_layout()
+        # plt.show()
+        
+        fig2= plt.figure(2)
+        ax = fig2.add_subplot()
+        
+        
+        ax.set_title(str(index))
+        ax.plot(np.arange(0,len(d),1),d,'y',label='diffenrence')
+        ax.plot(np.arange(0,len(dy[index]),1),dy[index],'r',label='diffirential')
         # dy = [(d[i+step_diff]-d[i]) for i in range(len(d)-step_diff)]
-        plt.plot(np.arange(0,len(d),1),depths[index][:,0],'black',label='depth')
-        plt.plot(np.arange(0,len(d),1),depths[index-1][:,-1],'cyan',label='depth*')
-        plt.plot(np.arange(0,len(d),1),depths_new[index][:,0],'green',label='new depth')
-        plt.plot(np.arange(0,len(d),1),depths_new[index-1][:,-1],'blue',label='new depth*')
+        ax.plot(np.arange(0,len(d),1),depths[index][:,0],'black',label='depth')
+        ax.plot(np.arange(0,len(d),1),depths[index-1][:,-1],'cyan',label='depth*')
+        ax.plot(np.arange(0,len(d),1),depths_new[index][:,0],'green',label='new depth')
+        ax.plot(np.arange(0,len(d),1),depths_new[index-1][:,-1],'blue',label='new depth*')
         # plt.plot(np.arange(0,len(d),1),(depths[index][:,0]+depths[index-1][:,-1])/2,'black')
-        plt.legend(loc='lower left')
+        ax.legend(loc='lower left')
         plt.show()
+        # break
 
 
     output_directory = Path(args.inout_directory+'/'+args.folder+'/'+args.shift+'/match_diff')
@@ -290,7 +333,7 @@ if __name__ == '__main__':
     parser.add_argument('-io','--inout_directory', help="directory to images", default="output")
     parser.add_argument('-f','--folder', help="folder of input images", default="27072023-1628")
     parser.add_argument('-df','--depth_folder', help="folder of depth", default="calib_param")
-    parser.add_argument('-s','--shift', help="shift of input images", default="100")    
+    parser.add_argument('-s','--shift', help="shift of input images", default="170")    
     parser.add_argument('-d','--divide', help="divide coefficent of input images", default="6")
     
     args = parser.parse_args()
