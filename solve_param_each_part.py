@@ -95,7 +95,7 @@ def solve_paras(args):
         np.save("{0}/{1}/{3}/calib_param/{1}-depth-{2}-{3}.npy".format
                 (args.inout_directory,args.folder,index,args.shift),np.polyval(coeff,depths[index]))
         print("save "+str(index)) 
-        
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
