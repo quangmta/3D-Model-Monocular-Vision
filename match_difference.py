@@ -3,7 +3,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from pathlib import Path
 import argparse
-
+import pandas as pd
+import math
 
 # coeff = [ 1.19410183, -1.003789  ]
 
@@ -171,17 +172,56 @@ def new_depth(depths,mask_left,mask_right,delta):
             depths_new[index-1][:,i] += new_delta/2*(1-abs(i+1)/center)
     return depths_new
 
-def calib_depth(depths,dup_left,dup_right,delta,step_diff,threshold):
+def calib_depth(depths,dup_left,dup_right,step_diff,threshold):
     depths_calib = [row.copy() for row in depths]
-    dy = np.array([(delta[:,i+step_diff]-delta[:,i]) for i in range(len(delta[0])-step_diff)]).T
+    delta_l = np.array([depths[index][:,0]-depths[index-1][:,-1] for index in range(int(args.divide))])
+    delta_r = np.array([depths[index][:,0]-depths[index-1][:,-1] for index in range(int(args.divide))])
+    dy = np.array([(delta_l[:,i+step_diff]-delta_l[:,i]) for i in range(len(delta_l[0])-step_diff)]).T
     last_colum = dy[:,-1]
-    for i in range(int(step_diff/2)):
-        dy = np.insert(dy,i,last_colum,axis=1)
-    for i in range(int(step_diff/2),step_diff):
+    width = sum(depths[i].shape[1] for i in range(int(args.divide)))
+    
+    #Read distance file
+    point_distance_file = pd.read_csv(args.inout_directory+'/'+args.folder+'/distance.csv')
+    sorted_point_distance = point_distance_file.sort_values('xp')
+    id_point=0
+    while sorted_point_distance.iloc[id_point]['xp']<int(args.shift):
+        id_point+= 1
+    
+    # for i in range(int(step_diff/2)):
+    #     dy = np.insert(dy,i,last_colum,axis=1)
+    for i in range(0,step_diff):
         dy = np.append(dy,last_colum[:,np.newaxis],axis=1)
+    
+    #check points
+    data_all = []  
+    for index in range(len(depths)): 
+        data=[]
+        left = int(index*width/int(args.divide))+int(args.shift)
+        right = int((index+1)*width/int(args.divide))+int(args.shift)         
+        while id_point<len(sorted_point_distance) and sorted_point_distance.iloc[id_point]['xp']<right:
+            row = sorted_point_distance.iloc[id_point]
+            col_part = int(row['xp'] - left)
+            depth_in_map = row['Distance']/100*math.cos(math.atan(
+                (col_part-depths[index].shape[1]/2)/(depths[index].shape[1]/2)*math.tan(math.pi/int(args.divide))))
+            print(row['Angle'],col_part,row['yp'],depths[index][int(row['yp']),col_part],depth_in_map)
+            data.append([abs(depths[index][int(row['yp']),col_part]-depth_in_map)])
+            id_point+=1
+            if id_point == len(sorted_point_distance) and int(args.shift)!=0:
+                id_point = 0
+                left -= width
+                right -= width
+        data_all.append(data)
+                
     for index in range(len(depths)):
         # print(dy[index])
-        arg = np.argwhere(np.abs(dy[index])>0.18).flatten()
+        coeff_left = np.mean(data_all[index][:int(len(data_all[index])/2)])
+        coeff_right = np.mean(data_all[index-1][int(len(data_all[index-1])/2):])
+        print(coeff_left,coeff_right)
+        
+        delta_l[index] = delta_l[index]*coeff_left/(coeff_left+coeff_right)
+        delta_r[index] = delta_r[index]*coeff_right/(coeff_left+coeff_right)
+                
+        arg = np.argwhere(np.abs(dy[index]/(depths[index][:,0]+depths[index][:,1]))>0.05).flatten()
         if len(arg) > 1:
             # if arg[0]<10:
             # arg = np.insert(arg,0,0)
@@ -189,50 +229,68 @@ def calib_depth(depths,dup_left,dup_right,delta,step_diff,threshold):
             # arg = np.append(arg,depths[index].shape[1]-2)
             # arg = np.append(arg,depths[index].shape[1]-1)
             new_arg = [0]
-            meet=1
+            # meet=1
             id_meet=arg[0]
             for i in range(1,len(arg)):
                 if arg[i]-arg[i-1]>1:
-                    if meet:
-                        new_arg = np.append(new_arg,int((arg[i-1]+id_meet)/2))
-                        meet=0
-                    else:
-                        id_meet=arg[i]
-                        meet=1
+                    # new_arg = np.append(new_arg,int(arg[i]))
+                    # if meet:
+                    new_arg = np.append(new_arg,int((arg[i-1]+id_meet)/2))
+                    id_meet=arg[i]
+                    # else:
+                    #     id_meet=arg[i]
+                    #     meet=1
             if arg[-1]-arg[-2]==1:
-                new_arg = np.append(new_arg,arg[-1])
-            new_arg = np.append(new_arg,len(delta[index])-1)
+                new_arg = np.append(new_arg,int((arg[-1]+id_meet)/2))
+            new_arg = np.append(new_arg,len(delta_l[index])-1)
             # new_arg =[x for x in new_arg if x>10 and x<len(dy[index])-10]
             print(index,arg,new_arg)
             check = np.zeros(len(new_arg))
+            
+            #Check points 
+            left = int(index*width/int(args.divide))+int(args.shift)
+            right = int((index+1)*width/int(args.divide))+int(args.shift)
+                     
             for i in range(len(new_arg)-1):
                 print(dup_left[index][new_arg[i]:new_arg[i+1]])
                 print(dup_right[index-1][new_arg[i]:new_arg[i+1]])
-                if np.sum((dup_left[index][new_arg[i]:new_arg[i+1]]>=threshold) &\
-                    (dup_right[index-1][new_arg[i]:new_arg[i+1]]>=threshold))/(new_arg[i+1]-new_arg[i]) < 0.5\
-                    and new_arg[i+1]-new_arg[i]<len(delta[index])/2:
+                # count1 = np.sum((dup_left[index][new_arg[i]:new_arg[i+1]]>=threshold) &\
+                #     (dup_right[index-1][new_arg[i]:new_arg[i+1]]>=threshold))/(new_arg[i+1]-new_arg[i])
+                count2 = np.sum((dup_left[index][new_arg[i]:new_arg[i+1]]>=threshold) &\
+                    (dup_right[index-1][new_arg[i]:new_arg[i+1]]<=threshold))/(new_arg[i+1]-new_arg[i])
+                count3 = np.sum((dup_left[index][new_arg[i]:new_arg[i+1]]<=threshold) &\
+                    (dup_right[index-1][new_arg[i]:new_arg[i+1]]>=threshold))/(new_arg[i+1]-new_arg[i])
+                count4 = np.sum((dup_left[index][new_arg[i]:new_arg[i+1]]<=threshold) &\
+                    (dup_right[index-1][new_arg[i]:new_arg[i+1]]<=threshold))/(new_arg[i+1]-new_arg[i])
+                if (count2>0.5 or count3>0.5 or (count4>0.5 and check[i-1]==True)) \
+                    and new_arg[i+1]-new_arg[i]<len(delta_l[index])/2:
                     check[i] = True
                     if new_arg[i]==0:
-                        delta[index][new_arg[i]:new_arg[i+1]] = np.zeros(new_arg[i+1]-new_arg[i])
+                        delta_l[index][new_arg[i]:new_arg[i+1]] = np.zeros(new_arg[i+1]-new_arg[i])
+                        delta_r[index][new_arg[i]:new_arg[i+1]] = np.zeros(new_arg[i+1]-new_arg[i])
                     elif i>0 and check[i-1] == True:
-                        delta[index][new_arg[i]:new_arg[i+1]] = np.full(new_arg[i+1]-new_arg[i],delta[index][new_arg[i-1]])
+                        delta_l[index][new_arg[i]:new_arg[i+1]] = np.full(new_arg[i+1]-new_arg[i],delta_l[index][new_arg[i-1]])
+                        delta_r[index][new_arg[i]:new_arg[i+1]] = np.full(new_arg[i+1]-new_arg[i],delta_r[index][new_arg[i-1]])
                     else:
-                        delta[index][new_arg[i]:new_arg[i+1]] = np.full(new_arg[i+1]-new_arg[i],delta[index][new_arg[i]])
+                        delta_l[index][new_arg[i]:new_arg[i+1]] = np.full(new_arg[i+1]-new_arg[i],delta_l[index][new_arg[i]])
+                        delta_r[index][new_arg[i]:new_arg[i+1]] = np.full(new_arg[i+1]-new_arg[i],delta_r[index][new_arg[i]])
+                        
     for index in range(len(depths)):
         #Check if left and right egdes are needed to turn one way
-        p1 = np.sum(delta[index]>0)/(len(delta[index]))
-        p2 = np.sum(delta[index]<0)/(len(delta[index]))
-        p3 = np.sum(delta[index-1]>0)/(len(delta[index-1]))
-        p4 = np.sum(delta[index-1]<0)/(len(delta[index-1]))
+        p1 = np.sum(delta_r[index]>0)/(len(delta_r[index]))
+        p2 = np.sum(delta_r[index]<0)/(len(delta_r[index]))
+        p3 = np.sum(delta_l[index-1]>0)/(len(delta_l[index-1]))
+        p4 = np.sum(delta_l[index-1]<0)/(len(delta_l[index-1]))
+        print(p1,p2,p3,p4)
         if (p1>0.9 and p4>0.9) or (p2>0.9 and p3>0.9):
             for i in range(0,len(depths[index-1][0])):
-                depths_calib[index-1][:,i] += (-delta[index-1]/2*(len(depths[index-1][0])-1-i)+delta[index]/2*i)/(len(depths[index-1][0])-1)
+                depths_calib[index-1][:,i] += (-delta_l[index-1]*(len(depths[index-1][0])-1-i)+delta_r[index]*i)/(len(depths[index-1][0])-1)
         else:
             center = int(len(depths[index-1][0])/2)
             for i in range(0,center):        
-                depths_calib[index-1][:,i] += -delta[index-1]/2*(1-i/center)
+                depths_calib[index-1][:,i] += -delta_l[index-1]*(1-i/center)
             for i in range(-1,-center,-1):
-                depths_calib[index-1][:,i] += delta[index]/2*(1-abs(i+1)/center)
+                depths_calib[index-1][:,i] += delta_r[index]*(1-abs(i+1)/center)
     return depths_calib,dy
 
 def match_diff(args):    
@@ -252,13 +310,12 @@ def match_diff(args):
     # print(dup_right[3][58:135])
     # print(dup_left[4][58:135])
 
-    delta = np.array([depths[index][:,0]-depths[index-1][:,-1] for index in range(int(args.divide))])
     # mask_left,mask_right = calib_mask(dup_left,dup_right,35)
     # print(mask_left)
     # print(mask_right)
     # depths_new = new_depth(depths,mask_left,mask_right,delta)
     step_diff = 5
-    depths_new,dy = calib_depth(depths,dup_left,dup_right,delta,step_diff,15)
+    depths_new,dy = calib_depth(depths,dup_left,dup_right,step_diff,15)
    
     for index in range(int(args.divide)):
         d = depths[index][:,0]-depths[index-1][:,-1]
