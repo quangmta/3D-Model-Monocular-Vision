@@ -155,3 +155,4 @@ calib_disparity.py
 calib_pcd.py
 # crop_panorama.py
 # solve_paras_one.py
+test_size.c
