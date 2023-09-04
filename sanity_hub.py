@@ -37,7 +37,6 @@ torch.hub._validate_not_a_forked_repo=lambda a,b,c: True
 # Trigger reload of MiDaS
 torch.hub.help("intel-isl/MiDaS", "DPT_BEiT_L_384", force_reload=True) 
 
-
 # model = torch.hub.load(".", "ZoeD_K", source="local", pretrained=True)
 # model = torch.hub.load(".", "ZoeD_NK", source="local", pretrained=True)
 model = torch.hub.load(".", "ZoeD_N", source="local", pretrained=True)

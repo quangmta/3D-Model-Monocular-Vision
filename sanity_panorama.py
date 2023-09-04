@@ -11,6 +11,7 @@ import glob
 
 from zoedepth.models.builder import build_model
 from zoedepth.utils.config import get_config
+
 from pprint import pprint
 
 from matplotlib import pyplot as plt
@@ -20,8 +21,8 @@ def sanity(args):
     torch.hub.help("intel-isl/MiDaS", args.model_midas, force_reload=True) 
     # torch.hub.help("intel-isl/MiDaS", "DPT_Large", force_reload=True) 
 
-    # DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-    DEVICE = "cpu"
+    DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+    # DEVICE = "cpu"
     if DEVICE == "cpu":
         print("WARNING: Running on CPU. This will be slow. Check your CUDA installation.")
 
@@ -71,7 +72,7 @@ def sanity(args):
             # print("start")
             depth = model.infer(X).cpu().numpy().squeeze()
             # print("done")
-            if depths == []:
+            if len(depths) == 0:
                 depths = depth
             else:
                 depths = np.concatenate((depths,depth),axis=1)
